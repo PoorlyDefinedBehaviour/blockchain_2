@@ -1,9 +1,10 @@
+use sha2::Digest;
 use std::time::SystemTime;
 use uuid::Uuid;
 
 type PublicKey = String;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Transaction {
   Transfer {
     id: Uuid,
@@ -28,5 +29,11 @@ impl Transaction {
         .as_micros(),
       signature: String::from("TODO"),
     }
+  }
+
+  pub fn hash(&self) -> String {
+    let as_string = format!("{:?}", self);
+
+    format!("{:x}", sha2::Sha256::digest(as_string.as_bytes()))
   }
 }
