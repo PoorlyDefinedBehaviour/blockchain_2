@@ -60,6 +60,8 @@ mod tests {
 
     let signed_transaction = wallet.sign(transaction.clone());
 
+    // TODO: this will be prettier if we make it a wallet method
+    // Example: wallet.verify(transaction)
     let key_pair = PKey::from_rsa(wallet.key_pair.clone()).unwrap();
 
     let mut verifier = Verifier::new(MessageDigest::sha256(), &key_pair).unwrap();
