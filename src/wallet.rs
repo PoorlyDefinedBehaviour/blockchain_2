@@ -13,13 +13,13 @@ pub struct Wallet {
   key_pair: Rsa<Private>,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SignedTransaction {
   signature: String,
   transaction: Transaction,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SignedBlock {
   signature: String,
   block: Block,

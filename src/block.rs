@@ -2,7 +2,7 @@ use crate::transaction::PublicKey;
 use crate::wallet::SignedTransaction;
 use sha2::Digest;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Block {
   transactions: Vec<SignedTransaction>,
   last_hash: String,
