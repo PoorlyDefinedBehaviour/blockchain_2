@@ -25,6 +25,27 @@ pub struct SignedBlock {
   block: Block,
 }
 
+impl SignedBlock {
+  pub fn genesis() -> Self {
+    SignedBlock {
+      signature: String::from("genesis_signature"),
+      block: Block::genesis(),
+    }
+  }
+
+  pub fn hash(&self) -> String {
+    self.block.hash()
+  }
+
+  pub fn last_hash(&self) -> String {
+    self.block.last_hash()
+  }
+
+  pub fn block_count(&self) -> u128 {
+    self.block.block_count()
+  }
+}
+
 impl Wallet {
   pub fn new() -> Self {
     Wallet {
@@ -164,5 +185,40 @@ mod tests {
     let wallet_b = Wallet::new();
 
     assert_eq!(wallet_b.verify_block(&block_signed_by_wallet_a), false)
+  }
+
+  #[test]
+  fn genesis_block_has_default_signature() {
+    let expected = SignedBlock {
+      signature: String::from("genesis_signature"),
+      block: Block::genesis(),
+    };
+
+    let block = SignedBlock::genesis();
+
+    assert_eq!(expected, block);
+  }
+
+  #[test]
+  fn returns_the_block_hash() {
+    let block = SignedBlock::genesis();
+
+    let expected = String::from("f6882b5cb59e3afea78ba0d30e6175d815ad09f429ed1b09a4622b5ed77f8466");
+
+    assert_eq!(block.hash(), expected);
+  }
+
+  #[test]
+  fn returns_the_previous_block_hash() {
+    let block = SignedBlock::genesis();
+
+    assert_eq!(block.last_hash(), String::from("genesis_hash"));
+  }
+
+  #[test]
+  fn returns_the_block_block_count() {
+    let block = SignedBlock::genesis();
+
+    assert_eq!(0, block.block_count());
   }
 }
