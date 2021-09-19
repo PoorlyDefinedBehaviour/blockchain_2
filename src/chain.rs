@@ -1,8 +1,10 @@
+use crate::account::Account;
 use crate::wallet::SignedBlock;
 
 #[derive(Debug)]
 pub struct Chain {
   blocks: Vec<SignedBlock>,
+  account: Account,
 }
 
 #[derive(Debug, PartialEq)]
@@ -15,6 +17,7 @@ impl Chain {
   pub fn new() -> Self {
     Self {
       blocks: vec![SignedBlock::genesis()],
+      account: Account::new(),
     }
   }
 
