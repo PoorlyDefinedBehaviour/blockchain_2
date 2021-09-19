@@ -4,7 +4,7 @@ use openssl::{
   hash::MessageDigest,
   pkey::{PKey, Private},
   rsa::Rsa,
-  sign::Signer,
+  sign::{Signer, Verifier},
 };
 
 #[derive(Debug)]
@@ -41,12 +41,27 @@ impl Wallet {
       transaction,
     }
   }
+
+  pub fn verify(
+    &self,
+    SignedTransaction {
+      signature,
+      transaction,
+    }: SignedTransaction,
+  ) -> bool {
+    let key_pair = PKey::from_rsa(self.key_pair.clone()).unwrap();
+
+    let mut verifier = Verifier::new(MessageDigest::sha256(), &key_pair).unwrap();
+
+    verifier.update(transaction.hash().as_bytes()).unwrap();
+
+    verifier.verify(&hex::decode(signature).unwrap()).unwrap()
+  }
 }
 
 #[cfg(test)]
 mod tests {
   use super::*;
-  use openssl::sign::Verifier;
 
   #[test]
   fn verifies_transactions_signed_by_same_wallet() {
@@ -60,20 +75,7 @@ mod tests {
 
     let signed_transaction = wallet.sign(transaction.clone());
 
-    // TODO: this will be prettier if we make it a wallet method
-    // Example: wallet.verify(transaction)
-    let key_pair = PKey::from_rsa(wallet.key_pair.clone()).unwrap();
-
-    let mut verifier = Verifier::new(MessageDigest::sha256(), &key_pair).unwrap();
-
-    verifier.update(transaction.hash().as_bytes()).unwrap();
-
-    assert_eq!(
-      verifier
-        .verify(&hex::decode(signed_transaction.signature).unwrap())
-        .unwrap(),
-      true
-    );
+    assert_eq!(wallet.verify(signed_transaction), true)
   }
 
   #[test]
@@ -90,17 +92,6 @@ mod tests {
 
     let wallet_b = Wallet::new();
 
-    let key_pair = PKey::from_rsa(wallet_b.key_pair.clone()).unwrap();
-
-    let mut verifier = Verifier::new(MessageDigest::sha256(), &key_pair).unwrap();
-
-    verifier.update(transaction.hash().as_bytes()).unwrap();
-
-    assert_eq!(
-      verifier
-        .verify(&hex::decode(transaction_signed_by_wallet_a.signature).unwrap())
-        .unwrap(),
-      false
-    );
+    assert_eq!(wallet_b.verify(transaction_signed_by_wallet_a), false)
   }
 }
