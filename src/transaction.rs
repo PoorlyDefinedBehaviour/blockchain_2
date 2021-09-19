@@ -2,7 +2,7 @@ use sha2::Digest;
 use std::time::SystemTime;
 use uuid::Uuid;
 
-type PublicKey = String;
+pub type PublicKey = String;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Transaction {

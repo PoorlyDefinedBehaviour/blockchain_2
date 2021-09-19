@@ -1,3 +1,4 @@
+use crate::block::Block;
 use crate::transaction::Transaction;
 use hex;
 use openssl::{
@@ -18,6 +19,12 @@ pub struct SignedTransaction {
   transaction: Transaction,
 }
 
+#[derive(Debug)]
+pub struct SignedBlock {
+  signature: String,
+  block: Block,
+}
+
 impl Wallet {
   pub fn new() -> Self {
     Wallet {
@@ -25,7 +32,7 @@ impl Wallet {
     }
   }
 
-  pub fn sign(&self, transaction: Transaction) -> SignedTransaction {
+  pub fn sign_transaction(&self, transaction: Transaction) -> SignedTransaction {
     let key_pair = PKey::from_rsa(self.key_pair.clone()).unwrap();
 
     let mut signer = Signer::new(MessageDigest::sha256(), &key_pair).unwrap();
@@ -42,18 +49,45 @@ impl Wallet {
     }
   }
 
-  pub fn verify(
+  pub fn verify_transaction(
     &self,
     SignedTransaction {
       signature,
       transaction,
-    }: SignedTransaction,
+    }: &SignedTransaction,
   ) -> bool {
     let key_pair = PKey::from_rsa(self.key_pair.clone()).unwrap();
 
     let mut verifier = Verifier::new(MessageDigest::sha256(), &key_pair).unwrap();
 
     verifier.update(transaction.hash().as_bytes()).unwrap();
+
+    verifier.verify(&hex::decode(signature).unwrap()).unwrap()
+  }
+
+  pub fn sign_block(&self, block: Block) -> SignedBlock {
+    let key_pair = PKey::from_rsa(self.key_pair.clone()).unwrap();
+
+    let mut signer = Signer::new(MessageDigest::sha256(), &key_pair).unwrap();
+
+    signer.update(block.hash().as_bytes()).unwrap();
+
+    let mut buffer = vec![0; signer.len().unwrap()];
+
+    signer.sign(&mut buffer).unwrap();
+
+    SignedBlock {
+      signature: hex::encode(buffer),
+      block,
+    }
+  }
+
+  pub fn verify_block(&self, SignedBlock { signature, block }: &SignedBlock) -> bool {
+    let key_pair = PKey::from_rsa(self.key_pair.clone()).unwrap();
+
+    let mut verifier = Verifier::new(MessageDigest::sha256(), &key_pair).unwrap();
+
+    verifier.update(block.hash().as_bytes()).unwrap();
 
     verifier.verify(&hex::decode(signature).unwrap()).unwrap()
   }
@@ -73,9 +107,9 @@ mod tests {
       10,
     );
 
-    let signed_transaction = wallet.sign(transaction.clone());
+    let signed_transaction = wallet.sign_transaction(transaction.clone());
 
-    assert_eq!(wallet.verify(signed_transaction), true)
+    assert_eq!(wallet.verify_transaction(&signed_transaction), true)
   }
 
   #[test]
@@ -88,10 +122,47 @@ mod tests {
       10,
     );
 
-    let transaction_signed_by_wallet_a = wallet_a.sign(transaction.clone());
+    let transaction_signed_by_wallet_a = wallet_a.sign_transaction(transaction.clone());
 
     let wallet_b = Wallet::new();
 
-    assert_eq!(wallet_b.verify(transaction_signed_by_wallet_a), false)
+    assert_eq!(
+      wallet_b.verify_transaction(&transaction_signed_by_wallet_a),
+      false
+    )
+  }
+
+  #[test]
+  fn verifies_blocks_signed_by_same_wallet() {
+    let wallet = Wallet::new();
+
+    let block = Block::new(
+      Vec::new(),
+      String::from("last_hash"),
+      String::from("forger_public_key"),
+      1,
+    );
+
+    let signed_block = wallet.sign_block(block);
+
+    assert_eq!(wallet.verify_block(&signed_block), true)
+  }
+
+  #[test]
+  fn verifies_blocks_signed_by_other_wallets() {
+    let wallet_a = Wallet::new();
+
+    let block = Block::new(
+      Vec::new(),
+      String::from("last_hash"),
+      String::from("forger_public_key"),
+      1,
+    );
+
+    let block_signed_by_wallet_a = wallet_a.sign_block(block);
+
+    let wallet_b = Wallet::new();
+
+    assert_eq!(wallet_b.verify_block(&block_signed_by_wallet_a), false)
   }
 }
