@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 type PublicKey = String;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Transaction {
   Transfer {
     id: Uuid,

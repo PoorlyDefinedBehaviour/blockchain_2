@@ -12,7 +12,7 @@ pub struct Wallet {
   key_pair: Rsa<Private>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct SignedTransaction {
   signature: String,
   transaction: Transaction,
