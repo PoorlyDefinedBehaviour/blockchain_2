@@ -5,7 +5,7 @@ use std::time::SystemTime;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Block {
-  transactions: Vec<SignedTransaction>,
+  pub transactions: Vec<SignedTransaction>,
   last_hash: String,
   forger: PublicKey,
   block_count: u128,

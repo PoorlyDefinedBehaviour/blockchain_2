@@ -12,7 +12,6 @@ pub enum Transaction {
     receiver: PublicKey,
     amount: i64,
     timestamp: u128,
-    signature: String,
   },
 }
 
@@ -27,7 +26,6 @@ impl Transaction {
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap()
         .as_micros(),
-      signature: String::from("TODO"),
     }
   }
 

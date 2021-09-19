@@ -26,7 +26,6 @@ impl Account {
     }
   }
 
-  // TODO: does it make sense to have a negative balance?
   pub fn balance(&self, account: &String) -> Option<i64> {
     self.balances.get(account).cloned()
   }

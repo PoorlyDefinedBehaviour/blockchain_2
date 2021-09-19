@@ -15,14 +15,14 @@ pub struct Wallet {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SignedTransaction {
-  signature: String,
-  transaction: Transaction,
+  pub signature: String,
+  pub transaction: Transaction,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SignedBlock {
-  signature: String,
-  block: Block,
+  pub signature: String,
+  pub block: Block,
 }
 
 impl SignedBlock {
