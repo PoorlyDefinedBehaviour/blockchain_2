@@ -11,3 +11,6 @@ uuid = { version = "0.8", features = ["v4"] }
 openssl = { version = "0.10.36", features = ["vendored"] }
 sha2 = "0.9.5"
 hex = "0.4.3"
+libp2p = { version = "0.39.1", features = ["tcp-tokio"] }
+tokio = { version = "1.12.0", features = ["full"] }
+futures = "0.3.17"
