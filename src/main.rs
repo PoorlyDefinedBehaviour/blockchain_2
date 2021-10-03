@@ -62,12 +62,12 @@ async fn main() -> std::io::Result<()> {
 
   #[derive(NetworkBehaviour)]
   #[behaviour(event_process = true)]
-  struct MyBheaviour {
+  struct MyBehaviour {
     floodsub: Floodsub,
     mdns: Mdns,
   }
 
-  impl NetworkBehaviourEventProcess<FloodsubEvent> for MyBheaviour {
+  impl NetworkBehaviourEventProcess<FloodsubEvent> for MyBehaviour {
     fn inject_event(&mut self, message: FloodsubEvent) {
       if let FloodsubEvent::Message(message) = message {
         println!(
@@ -79,7 +79,7 @@ async fn main() -> std::io::Result<()> {
     }
   }
 
-  impl NetworkBehaviourEventProcess<MdnsEvent> for MyBheaviour {
+  impl NetworkBehaviourEventProcess<MdnsEvent> for MyBehaviour {
     fn inject_event(&mut self, event: MdnsEvent) {
       match event {
         MdnsEvent::Discovered(list) => {
@@ -101,7 +101,7 @@ async fn main() -> std::io::Result<()> {
   let mut swarm = {
     let mdns = Mdns::new(Default::default()).await?;
 
-    let mut behaviour = MyBheaviour {
+    let mut behaviour = MyBehaviour {
       floodsub: Floodsub::new(peer_id.clone()),
       mdns,
     };
