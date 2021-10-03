@@ -2,14 +2,14 @@ use crate::node::{Node, NodeError};
 use crate::viewmodel;
 use crate::wallet::SignedTransaction;
 use actix_web::{post, web, HttpResponse, Responder};
-use std::sync::RwLock;
+use std::sync::{Arc, Mutex};
 
 #[post("/transactions")]
 async fn add_transaction(
-  node: web::Data<RwLock<Node>>,
+  node: web::Data<Arc<Mutex<Node>>>,
   input: web::Json<viewmodel::AddTransactionInput>,
 ) -> impl Responder {
-  let mut node = node.write().unwrap();
+  let mut node = node.lock().unwrap();
 
   let input = input.into_inner();
 
