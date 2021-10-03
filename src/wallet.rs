@@ -1,5 +1,5 @@
 use crate::block::Block;
-use crate::transaction::Transaction;
+use crate::transaction::{PublicKey, Transaction};
 use hex;
 use openssl::{
   hash::MessageDigest,
@@ -53,6 +53,10 @@ impl Wallet {
     }
   }
 
+  pub fn public_key(&self) -> PublicKey {
+    hex::encode(self.key_pair.public_key_to_pem().unwrap())
+  }
+
   pub fn sign_transaction(&self, transaction: Transaction) -> SignedTransaction {
     let key_pair = PKey::from_rsa(self.key_pair.clone()).unwrap();
 
@@ -71,19 +75,36 @@ impl Wallet {
   }
 
   pub fn verify_transaction(
-    &self,
+    hex_encoded_public_key: &PublicKey,
     SignedTransaction {
       signature,
       transaction,
     }: &SignedTransaction,
   ) -> bool {
-    let key_pair = PKey::from_rsa(self.key_pair.clone()).unwrap();
+    let public_key = match hex::decode(hex_encoded_public_key) {
+      Err(_) => return false,
+      Ok(key) => key,
+    };
 
-    let mut verifier = Verifier::new(MessageDigest::sha256(), &key_pair).unwrap();
+    let public_key = match Rsa::public_key_from_pem(&public_key) {
+      Err(_) => return false,
+      Ok(key) => key,
+    };
 
-    verifier.update(transaction.hash().as_bytes()).unwrap();
+    let public_key = match PKey::from_rsa(public_key) {
+      Err(_) => return false,
+      Ok(key) => key,
+    };
 
-    verifier.verify(&hex::decode(signature).unwrap()).unwrap()
+    let mut verifier = match Verifier::new(MessageDigest::sha256(), &public_key) {
+      Err(_) => return false,
+      Ok(verifier) => verifier,
+    };
+
+    match verifier.update(transaction.hash().as_bytes()) {
+      Err(_) => false,
+      Ok(_) => verifier.verify(&hex::decode(signature).unwrap()).unwrap(),
+    }
   }
 
   pub fn sign_block(&self, block: Block) -> SignedBlock {
@@ -130,7 +151,10 @@ mod tests {
 
     let signed_transaction = wallet.sign_transaction(transaction.clone());
 
-    assert_eq!(wallet.verify_transaction(&signed_transaction), true)
+    assert_eq!(
+      Wallet::verify_transaction(&wallet.public_key(), &signed_transaction),
+      true
+    )
   }
 
   #[test]
@@ -148,7 +172,7 @@ mod tests {
     let wallet_b = Wallet::new();
 
     assert_eq!(
-      wallet_b.verify_transaction(&transaction_signed_by_wallet_a),
+      Wallet::verify_transaction(&wallet_b.public_key(), &transaction_signed_by_wallet_a),
       false
     )
   }

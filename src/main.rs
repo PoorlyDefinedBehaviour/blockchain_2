@@ -1,35 +1,48 @@
 mod account;
 mod block;
 mod chain;
+mod controllers;
 mod node;
-mod p2p;
 mod transaction;
-mod transaction_pool;
+mod viewmodel;
 mod wallet;
 
+use node::Node;
+use std::sync::RwLock;
 
+// use libp2p::{
+//   core::upgrade,
+//   floodsub::{self, Floodsub, FloodsubEvent},
+//   identity,
+//   mdns::{Mdns, MdnsEvent},
+//   mplex, noise,
+//   swarm::{NetworkBehaviourEventProcess, SwarmBuilder, SwarmEvent},
+//   tcp::TokioTcpConfig,
+//   Multiaddr, NetworkBehaviour, PeerId, Transport,
+// };
 
+// use tokio::io::{self, AsyncBufReadExt};
 
-use libp2p::{
-  core::upgrade,
-  floodsub::{self, Floodsub, FloodsubEvent},
-  identity,
-  mdns::{Mdns, MdnsEvent},
-  mplex, noise,
-  swarm::{NetworkBehaviourEventProcess, SwarmBuilder, SwarmEvent},
-  tcp::TokioTcpConfig,
-  Multiaddr, NetworkBehaviour, PeerId, Transport,
-};
+// use futures::StreamExt;
 
-use tokio::io::{self, AsyncBufReadExt};
+// use std::error::Error;
 
-use futures::StreamExt;
+use actix_web::{web, App, HttpServer};
 
-use std::error::Error;
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+  let node = web::Data::new(RwLock::new(Node::new()));
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
-  let peer_id_keys = identity::Keypair::generate_ed25519();
+  HttpServer::new(move || {
+    App::new()
+      .app_data(node.clone())
+      .service(controllers::add_transaction)
+  })
+  .bind("127.0.0.1:8080")?
+  .run()
+  .await
+
+  /* let peer_id_keys = identity::Keypair::generate_ed25519();
   let peer_id = PeerId::from(peer_id_keys.public());
 
   println!("peer id: {:?}", &peer_id);
@@ -126,5 +139,5 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
       }
     }
-  }
+  }*/
 }

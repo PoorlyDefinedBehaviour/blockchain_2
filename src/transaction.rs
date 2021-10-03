@@ -7,7 +7,7 @@ pub type PublicKey = String;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Transaction {
   Transfer {
-    id: Uuid,
+    id: String,
     sender: PublicKey,
     receiver: PublicKey,
     amount: i64,
@@ -16,16 +16,20 @@ pub enum Transaction {
 }
 
 impl Transaction {
+  fn timestamp() -> u128 {
+    SystemTime::now()
+      .duration_since(SystemTime::UNIX_EPOCH)
+      .unwrap()
+      .as_micros()
+  }
+
   pub fn transfer(sender: PublicKey, receiver: PublicKey, amount: i64) -> Self {
     Transaction::Transfer {
-      id: Uuid::new_v4(),
+      id: Uuid::new_v4().to_string(),
       sender,
       receiver,
       amount,
-      timestamp: SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap()
-        .as_micros(),
+      timestamp: Transaction::timestamp(),
     }
   }
 
